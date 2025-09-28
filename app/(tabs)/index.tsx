@@ -43,6 +43,11 @@ export default function PomodoroScreen() {
     };
   }, [isRunning, timeLeft]);
 
+  useEffect(() => {
+    if (!isRunning) {
+      setTimeLeft(isWorkTime ? workTime : (completedPomodoros % 4 === 0 ? longBreak : shortBreak));
+    }
+  }, [workTime, shortBreak, longBreak]);
   const playVibration = () =>     Vibration.vibrate([500, 500, 500]);
 
   const handleTimerComplete = () => {
