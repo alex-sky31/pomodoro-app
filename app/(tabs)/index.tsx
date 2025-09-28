@@ -1,98 +1,192 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Vibration,
+  StatusBar,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import styles from "../../styles/PomodoroStyles";
+import { useTimerSettings } from "@/app/contexts/TimerSettingsContext";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+/*const WORK_TIME = 25 * 60; // 25 minutes
+const SHORT_BREAK = 5 * 60; // 5 minutes
+const LONG_BREAK = 15 * 60; // 15 minutes*/
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+export default function PomodoroScreen() {
+  const { workTime, shortBreak, longBreak } = useTimerSettings();
+
+  const [timeLeft, setTimeLeft] = useState<number>(workTime);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isWorkTime, setIsWorkTime] = useState<boolean>(true);
+  const [completedPomodoros, setCompletedPomodoros] = useState<number>(0);
+  const [totalSessions, setTotalSessions] = useState<number>(0);
+
+  const intervalRef = useRef< NodeJS.Timeout | string | number | undefined>(undefined);
+  // Gestion du timer
+
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      handleTimerComplete();
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning, timeLeft]);
+
+  const playVibration = () =>     Vibration.vibrate([500, 500, 500]);
+
+  const handleTimerComplete = () => {
+    setIsRunning(false);
+    playVibration();
+
+    // 👇 vibration quand le timer se termine
+    if (isWorkTime) {
+      const newCompleted = completedPomodoros + 1;
+      setCompletedPomodoros(newCompleted);
+
+      const isLongBreak = newCompleted % 4 === 0;
+      const breakTime = isLongBreak ? longBreak : shortBreak;
+      const breakType = isLongBreak ? "longue pause" : "pause courte";
+
+      setTimeLeft(breakTime);
+      setIsWorkTime(false);
+
+      Alert.alert("🍅 Pomodoro terminé !", `Excellent travail ! Temps pour une ${breakType}.`, [
+        { text: "OK", onPress: () => setIsRunning(true) },
+      ]);
+    } else {
+      setTimeLeft(workTime);
+      setIsWorkTime(true);
+      setTotalSessions((prev) => prev + 1);
+
+      Alert.alert("⏰ Pause terminée !", "Prêt pour un nouveau Pomodoro ?", [
+        { text: "Pas encore", style: "cancel" },
+        { text: "C'est parti !", onPress: () => setIsRunning(true) },
+      ]);
+    }
+  };
+
+  const toggleTimer = () => setIsRunning(!isRunning);
+
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTimeLeft(isWorkTime ? workTime : completedPomodoros % 4 === 0 ? longBreak : shortBreak);
+  };
+
+  const skipSession = () => {
+    Alert.alert("Passer cette session ?", "Êtes-vous sûr ?", [
+      { text: "Annuler", style: "cancel" },
+      { text: "Passer", onPress: () => setTimeLeft(0) },
+    ]);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getProgressPercentage = (): number => {
+    const totalTime = isWorkTime ? workTime : completedPomodoros % 4 === 0 ? longBreak : shortBreak;
+    return ((totalTime - timeLeft) / totalTime) * 100;
+  };
+
+  const renderProgressDots = () => {
+    return Array.from({ length: 4 }).map((_, i) => (
+        <View
+            key={i}
+            style={[styles.dot, i < completedPomodoros % 4 ? styles.dotCompleted : styles.dotEmpty]}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    ));
+  };
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const resetAll = () => {
+    Alert.alert("Réinitialiser tout ?", "Cela va remettre à zéro vos progrès.", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Réinitialiser",
+        onPress: () => {
+          setIsRunning(false);
+          setTimeLeft(workTime);
+          setIsWorkTime(true);
+          setCompletedPomodoros(0);
+          setTotalSessions(0);
+        },
+      },
+    ]);
+  };
+
+  return (
+      <LinearGradient
+          colors={isWorkTime ? ["#FF6B6B", "#FF8E8E"] : ["#4ECDC4", "#6BCFCF"]}
+          style={styles.container}
+      >
+        <StatusBar barStyle="light-content" />
+
+        <View style={styles.header}>
+          <Text style={styles.title}>🍅 Pomodoro Timer</Text>
+          <Text style={styles.subtitle}>{isWorkTime ? "Temps de travail" : "Temps de pause"}</Text>
+        </View>
+
+        <View style={styles.timerContainer}>
+          <View style={styles.circleContainer}>
+            <View style={styles.circle}>
+              <View
+                  style={[
+                    styles.progressCircle,
+                    { transform: [{ rotate: `${(getProgressPercentage() * 360) / 100}deg` }] },
+                  ] as any}
+              />
+              <View style={styles.innerCircle}>
+                <Text style={styles.timeText}>{formatTime(timeLeft)}</Text>
+                <Text style={styles.sessionText}>Session {Math.floor(totalSessions / 2) + 1}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.progressDots}>{renderProgressDots()}</View>
+
+          <View style={styles.stats}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{completedPomodoros}</Text>
+              <Text style={styles.statLabel}>Pomodoros</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{totalSessions}</Text>
+              <Text style={styles.statLabel}>Sessions</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.controls}>
+          <TouchableOpacity style={[styles.controlButton, styles.secondaryButton]} onPress={resetTimer}>
+            <Text style={styles.controlButtonText}>🔄</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.controlButton, styles.primaryButton]} onPress={toggleTimer}>
+            <Text style={[styles.controlButtonText, styles.primaryButtonText]}>
+              {isRunning ? "⏸️" : "▶️"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.controlButton, styles.secondaryButton]} onPress={skipSession}>
+            <Text style={styles.controlButtonText}>⏭️</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.resetAllButton} onPress={resetAll}>
+          <Text style={styles.resetAllText}>Réinitialiser tout</Text>
+        </TouchableOpacity>
+      </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
