@@ -152,6 +152,10 @@ const styles = StyleSheet.create({
         color: "#333",
         fontSize: 30,
     },
+    focusBtnText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
     resetAllButton: {
         paddingVertical: 12,
         paddingHorizontal: 20,
@@ -159,6 +163,13 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)",
+    },
+    focusBtn: {
+        backgroundColor: '#4ECDC4',
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 20,
+        marginBottom: 20,
     },
     resetAllText: {
         color: "rgba(255,255,255,0.8)",

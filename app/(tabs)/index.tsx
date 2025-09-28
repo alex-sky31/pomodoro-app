@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Vibration,
-  StatusBar,
-} from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../../styles/PomodoroStyles";
 import { useTimerSettings } from "@/app/contexts/TimerSettingsContext";
-
-/*const WORK_TIME = 25 * 60; // 25 minutes
-const SHORT_BREAK = 5 * 60; // 5 minutes
-const LONG_BREAK = 15 * 60; // 15 minutes*/
+import {
+  View, Text, TouchableOpacity, Alert, Vibration, StatusBar, Linking, Platform
+} from 'react-native';
 
 export default function PomodoroScreen() {
   const { workTime, shortBreak, longBreak } = useTimerSettings();
@@ -95,12 +87,6 @@ export default function PomodoroScreen() {
     ]);
   };
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const getProgressPercentage = (): number => {
     const totalTime = isWorkTime ? workTime : completedPomodoros % 4 === 0 ? longBreak : shortBreak;
     return ((totalTime - timeLeft) / totalTime) * 100;
@@ -114,6 +100,8 @@ export default function PomodoroScreen() {
         />
     ));
   };
+
+
 
   const resetAll = () => {
     Alert.alert("Réinitialiser tout ?", "Cela va remettre à zéro vos progrès.", [
@@ -131,6 +119,13 @@ export default function PomodoroScreen() {
     ]);
   };
 
+
+  const formatTime = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+  };
+
   return (
       <LinearGradient
           colors={isWorkTime ? ["#FF6B6B", "#FF8E8E"] : ["#4ECDC4", "#6BCFCF"]}
@@ -142,6 +137,7 @@ export default function PomodoroScreen() {
           <Text style={styles.title}>🍅 Pomodoro Timer</Text>
           <Text style={styles.subtitle}>{isWorkTime ? "Temps de travail" : "Temps de pause"}</Text>
         </View>
+
 
         <View style={styles.timerContainer}>
           <View style={styles.circleContainer}>
