@@ -39,6 +39,35 @@ const styles = StyleSheet.create({
         width: 280,
         height: 280,
         borderRadius: 140,
+        backgroundColor: 'rgba(255,255,255,0.2)', // fond translucide
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        borderWidth: 8,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
+    progressCircle: {
+        position: 'absolute',
+        width: 276,
+        height: 276,
+        borderRadius: 138,
+        borderWidth: 4,
+        borderColor: 'transparent',
+        borderTopColor: 'white',
+        borderRightColor: 'white',
+    },
+    innerCircle: {
+        width: 240,
+        height: 240,
+        borderRadius: 120,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden', // nécessaire pour BlurView
+    },
+   /* circle: {
+        width: 280,
+        height: 280,
+        borderRadius: 140,
         backgroundColor: "rgba(255,255,255,0.2)",
         alignItems: "center",
         justifyContent: "center",
@@ -63,7 +92,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.9)",
         alignItems: "center",
         justifyContent: "center",
-    },
+    },*/
     timeText: {
         fontSize: 48,
         fontWeight: "bold",
@@ -91,39 +120,127 @@ const styles = StyleSheet.create({
     dotEmpty: {
         backgroundColor: "rgba(255,255,255,0.3)",
     },
-    stats: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        width: "100%",
-        marginBottom: 20,
+
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 20,
     },
-    statItem: {
-        alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.2)",
-        paddingVertical: 15,
-        paddingHorizontal: 25,
+    statCard: {
+        flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.2)', // léger fond translucide
+        marginHorizontal: 10,
         borderRadius: 15,
-        minWidth: 80,
+        paddingVertical: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4.65,
+        elevation: 5,
     },
     statNumber: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "white",
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#fff',
     },
     statLabel: {
-        fontSize: 12,
-        color: "rgba(255,255,255,0.8)",
-        marginTop: 4,
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        marginTop: 5,
+        textAlign: 'center',
     },
     controls: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+    },
+
+    controlButton: {
+        marginHorizontal: 8,
+        borderRadius: 50,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+    },
+
+    smallBtn: {
+        width: 55, // réduit
+        height: 55,
+    },
+
+    primaryButton: {
+        backgroundColor: "#e1e1e1",
+    },
+
+    secondaryButton: {
+        backgroundColor: "rgba(255,255,255,0.2)",
+    },
+
+    controlButtonText: {
+        fontSize: 20, // texte réduit
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    /*controls: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        width: '100%',
+        marginTop: 20,
+    },
+
+    controlButton: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4.65,
+        elevation: 8, // pour Android
+    },
+
+    primaryButton: {
+        backgroundColor: '#fff',
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    secondaryButton: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+
+    controlButtonText: {
+        fontSize: 28,
+        color: '#fff',
+    },*/
+
+    primaryButtonText: {
+        fontSize: 20,
+        color: '#333',
+        fontWeight: 'bold',
+    },
+   /* controls: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",
         paddingHorizontal: 20,
         marginBottom: 20,
-    },
-    controlButton: {
+    },*/
+    /*controlButton: {
         width: 70,
         height: 70,
         borderRadius: 35,
@@ -151,7 +268,7 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         color: "#333",
         fontSize: 30,
-    },
+    },*/
     focusBtnText: {
         color: 'white',
         fontWeight: 'bold',

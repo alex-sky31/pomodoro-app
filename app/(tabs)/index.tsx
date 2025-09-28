@@ -1,20 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
+import { BlurView } from 'expo-blur';
 
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../../styles/PomodoroStyles";
 import { useTimerSettings } from "@/app/contexts/TimerSettingsContext";
 import {
-  View, Text, TouchableOpacity, Alert, Vibration, StatusBar, Linking, Platform
+  View, Text, TouchableOpacity, Alert, Vibration, StatusBar, Linking,  StyleSheet
 } from 'react-native';
+import {Video} from "expo-av";
+import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {router, useFocusEffect, useRouter} from "expo-router";
+import {useTimerState} from "@/app/contexts/TimerStateContext";
 
 export default function PomodoroScreen() {
   const { workTime, shortBreak, longBreak } = useTimerSettings();
 
   const [timeLeft, setTimeLeft] = useState<number>(workTime);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isWorkTime, setIsWorkTime] = useState<boolean>(true);
   const [completedPomodoros, setCompletedPomodoros] = useState<number>(0);
   const [totalSessions, setTotalSessions] = useState<number>(0);
+  const { isRunning, setIsRunning } = useTimerState();
+
+  const router = useRouter();
 
   const intervalRef = useRef< NodeJS.Timeout | string | number | undefined>(undefined);
   // Gestion du timer
@@ -34,6 +41,12 @@ export default function PomodoroScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isRunning, timeLeft]);
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    setIsRunning(isRunning); // met à jour les params
+  }, [isRunning]);
 
   useEffect(() => {
     if (!isRunning) {
@@ -120,6 +133,7 @@ export default function PomodoroScreen() {
   };
 
 
+
   const formatTime = (sec: number) => {
     const mins = Math.floor(sec / 60);
     const secs = sec % 60;
@@ -127,11 +141,23 @@ export default function PomodoroScreen() {
   };
 
   return (
-      <LinearGradient
-          colors={isWorkTime ? ["#FF6B6B", "#FF8E8E"] : ["#4ECDC4", "#6BCFCF"]}
-          style={styles.container}
-      >
-        <StatusBar barStyle="light-content" />
+      <View style={styles.container}>
+
+        <StatusBar hidden={isRunning} />
+        <Video
+            source={require('../../assets/background.mp4')} // ta vidéo locale
+            rate={0.8}                 // vitesse normale
+            volume={0}                  // silencieuse
+            isMuted                     // muet
+            resizeMode="cover"          // couvre tout le container
+            shouldPlay
+            isLooping={false}// démarre automatiquement
+            useNativeControls={false}   // ⚡ pas de play/pause à l’écran
+            style={StyleSheet.absoluteFill} // remplit tout le parent
+
+        />
+
+        <View style={{...StyleSheet.absoluteFillObject, backgroundColor:'rgba(0,0,0,0.3)'}} />
 
         <View style={styles.header}>
           <Text style={styles.title}>🍅 Pomodoro Timer</Text>
@@ -142,52 +168,77 @@ export default function PomodoroScreen() {
         <View style={styles.timerContainer}>
           <View style={styles.circleContainer}>
             <View style={styles.circle}>
+              {/* Cercle de progression */}
               <View
                   style={[
                     styles.progressCircle,
                     { transform: [{ rotate: `${(getProgressPercentage() * 360) / 100}deg` }] },
                   ] as any}
               />
-              <View style={styles.innerCircle}>
+
+              {/* Cercle intérieur avec effet glace */}
+              <BlurView intensity={80} tint="light" style={styles.innerCircle}>
                 <Text style={styles.timeText}>{formatTime(timeLeft)}</Text>
                 <Text style={styles.sessionText}>Session {Math.floor(totalSessions / 2) + 1}</Text>
-              </View>
+              </BlurView>
             </View>
           </View>
 
           <View style={styles.progressDots}>{renderProgressDots()}</View>
 
-          <View style={styles.stats}>
-            <View style={styles.statItem}>
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
               <Text style={styles.statNumber}>{completedPomodoros}</Text>
-              <Text style={styles.statLabel}>Pomodoros</Text>
+              <Text style={styles.statLabel}>Focus Run</Text>
             </View>
-            <View style={styles.statItem}>
+
+            <View style={styles.statCard}>
               <Text style={styles.statNumber}>{totalSessions}</Text>
-              <Text style={styles.statLabel}>Sessions</Text>
+              <Text style={styles.statLabel}>Break Sessions</Text>
             </View>
           </View>
-        </View>
 
-        <View style={styles.controls}>
-          <TouchableOpacity style={[styles.controlButton, styles.secondaryButton]} onPress={resetTimer}>
+        </View>
+        <View
+            style={[
+              styles.controls,
+              { marginTop: isRunning ? 20 : 15, marginBottom: isRunning ? 5 : 20 },
+            ]}
+        >
+          {/* Reset */}
+          <TouchableOpacity
+              style={[styles.controlButton, styles.secondaryButton, styles.smallBtn]}
+              onPress={resetTimer}
+          >
             <Text style={styles.controlButtonText}>🔄</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.controlButton, styles.primaryButton]} onPress={toggleTimer}>
+          {/* Play / Pause */}
+          <TouchableOpacity
+              style={[styles.controlButton, styles.primaryButton, styles.smallBtn]}
+              onPress={toggleTimer}
+          >
             <Text style={[styles.controlButtonText, styles.primaryButtonText]}>
               {isRunning ? "⏸️" : "▶️"}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.controlButton, styles.secondaryButton]} onPress={skipSession}>
+          {/* Skip */}
+          <TouchableOpacity
+              style={[styles.controlButton, styles.secondaryButton, styles.smallBtn]}
+              onPress={skipSession}
+          >
             <Text style={styles.controlButtonText}>⏭️</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.resetAllButton} onPress={resetAll}>
+
+        {!isRunning && <TouchableOpacity
+            style={[styles.resetAllButton, {marginBottom: isRunning ? 20 : 30}]}
+            onPress={resetAll}
+        >
           <Text style={styles.resetAllText}>Réinitialiser tout</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+        </TouchableOpacity>}
+      </View>
   );
 }

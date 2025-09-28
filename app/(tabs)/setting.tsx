@@ -8,7 +8,7 @@ import {
     Keyboard,
     TouchableWithoutFeedback,
     Platform,
-    KeyboardAvoidingView
+    KeyboardAvoidingView, StatusBar, ScrollView
 } from "react-native";
 import styles from '../../styles/setting'
 import {useTimerSettings} from "@/app/contexts/TimerSettingsContext";
@@ -57,9 +57,10 @@ export default function SettingsScreen() {
         },
     ];
     return (
+        <ScrollView style={styles.container}>
+            <StatusBar barStyle='light'/>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <SafeAreaView style={{ flex: 1 }}>
-
+            <SafeAreaView>
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -110,6 +111,7 @@ export default function SettingsScreen() {
             </KeyboardAvoidingView>
             </SafeAreaView>
         </TouchableWithoutFeedback>
+        </ScrollView>
     );
 }
 
